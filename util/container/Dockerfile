@@ -65,8 +65,11 @@ RUN sed -i -e '/^$/d' -e '/^#/d' -e 's/#.*//' /tmp/apt-requirements.txt \
 
 # RISC-V device toolchain
 COPY util/get-toolchain.py /tmp/get-toolchain.py
-RUN /tmp/get-toolchain.py -r ${RISCV_TOOLCHAIN_TAR_VERSION} \
+RUN apt-get update && apt-get install -y python3 ca-certificates wget curl \
+    && update-ca-certificates \
+    && /tmp/get-toolchain.py -r ${RISCV_TOOLCHAIN_TAR_VERSION} \
     && rm -f /tmp/get-toolchain.py
+
 
 # Install and configure clang and llvm tools for coverage measurements.
 # Note: Some commands listed below are missing in 13.0.1 and cause warnings during
@@ -170,5 +173,8 @@ RUN BAZELISK_PATH="/usr/local/bin/bazelisk"; \
     ln -s ${BAZELISK_PATH} /usr/local/bin/bazel
 
 RUN runuser dev -c "bazel > /dev/null"
+
+COPY util/container/start.sh /start.sh
+RUN chmod +x /start.sh
 
 ENTRYPOINT [ "/start.sh" ]
